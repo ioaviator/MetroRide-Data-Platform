@@ -66,3 +66,25 @@ resource "databricks_cluster" "metro_ride_cluster" {
   ]
 }
 
+
+# Create Azure Storage Account
+data "azurerm_storage_account" "metro_ride_storage_data" {
+  name                = azurerm_storage_account.metro_ride.name
+  resource_group_name = azurerm_resource_group.metro_ride.name
+  depends_on          = [azurerm_storage_account.metro_ride]
+}
+
+resource "azurerm_storage_account" "metro_ride" {
+  name                     = "metroridestorage"
+  resource_group_name      = azurerm_resource_group.metro_ride.name
+  location                 = "Canada Central"
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+}
+
+resource "azurerm_storage_container" "bronze"{
+  name = "bronze"
+  storage_account_name = azurerm_storage_account.metro_ride.name
+  container_access_type = "private"
+  depends_on = [ azurerm_storage_account.metro_ride ]
+}
