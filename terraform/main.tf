@@ -88,3 +88,40 @@ resource "azurerm_storage_container" "bronze"{
   container_access_type = "private"
   depends_on = [ azurerm_storage_account.metro_ride ]
 }
+
+# postgresql server
+resource "azurerm_postgresql_flexible_server" "metro_ride_db_server" {
+  name                          = "metro-ride-db-server"
+  resource_group_name           = azurerm_resource_group.metro_ride.name
+  location                      = azurerm_resource_group.metro_ride.location
+  version                       = "16"
+  public_network_access_enabled = true
+  administrator_login           = var.db_admin_login
+  administrator_password        = var.db_admin_pass
+  zone                          = "1"
+
+  storage_mb   = 32768
+  storage_tier = "P30"
+
+  sku_name    = "GP_Standard_D4s_v3"
+  create_mode = "Default"
+
+  authentication {
+    password_auth_enabled = true
+  }
+
+  depends_on = [ azurerm_resource_group.metro_ride ]
+
+}
+
+resource "azurerm_postgresql_flexible_server_database" "metro_ride_db" {
+  name      = "metro_ride_db"
+  server_id = azurerm_postgresql_flexible_server.metro_ride_db_server.id
+  collation = "en_US.utf8"
+  charset   = "utf8"
+
+  # prevent the possibility of accidental data loss
+  lifecycle {
+    prevent_destroy = false
+  }
+}
